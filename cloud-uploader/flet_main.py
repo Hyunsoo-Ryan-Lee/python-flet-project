@@ -139,8 +139,8 @@ def main(page: ft.Page):
             {visual_log_txt}
             """
             init_page()
-            files.current.controls.insert(1, upload_info_text)
-            page.update()
+            # files.current.controls.insert(1, upload_info_text)
+            # page.update()
             time.sleep(4)
             shutil.rmtree(upload_path)
             os.mkdir(upload_path)
@@ -189,11 +189,12 @@ def main(page: ft.Page):
                 )
         
     def init_page():
+        page.controls.insert(1, passwd_validate_btn)
         select_file_btn.disabled = True
         empty_uploadDir_btn.disabled = True
         page.controls.remove(upload_file_btn)
-        page.controls.insert(1, passwd_validate_btn)
         files.current.controls.clear()
+        files.current.controls.insert(1, upload_info_text)
         page.update()
 
     def check_passwd(e, passwd):

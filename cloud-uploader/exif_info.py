@@ -39,7 +39,12 @@ def convert_decimal_degrees(degree, minutes, seconds, direction):
 
 photo_format = ["jpg", "png", "jpeg", "bmp"]
 
+def preprocessor(file):
+    file = file.replace('_','')
+
+
 def get_exif(file):
+    
     exif_dict = {}
     if any(extension in file.lower() for extension in photo_format):
         gps_coords = {}
@@ -82,6 +87,7 @@ def get_exif(file):
             
     # 2-1. 비디오 포맷일 때
     else:
+        file = file.replace('_', '') # 카카오톡 Download 영상일 때 파일명 변경
         print("Video Format")
         exif_dict['type'] = 'video'
         pattern = r"202([0-9])(0[1-9]|1[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])"
