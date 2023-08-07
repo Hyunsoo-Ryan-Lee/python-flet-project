@@ -103,7 +103,7 @@ def main(page: ft.Page):
             log_txt += (s3_key + "\n")
             s3_file_path.append(s3_key)
             _path = os.path.join(upload_path, file)
-            # upload_image_to_s3(_path, bucket_name, s3_key)
+            upload_image_to_s3(_path, bucket_name, s3_key)
         
         is_uploaded = []
         for s3_key in s3_file_path:
@@ -111,7 +111,8 @@ def main(page: ft.Page):
                 is_uploaded.append(True)
             else:
                 is_uploaded.append(False)
-                
+        
+        time.sleep(0.5)
         if is_uploaded.count(True) == total_file_count:
             
             log_txt += "\n"
