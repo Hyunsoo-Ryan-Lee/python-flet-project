@@ -1,9 +1,9 @@
-import os, boto3, time, shutil
+import os, boto3, re, shutil
 import flet as ft
 from flet_route import Params, Basket
 from dotenv import load_dotenv
 from utils import (run_aws_cli_command, 
-                   check_file_exists_in_s3, 
+                   get_subfolders_in_bucket, 
                    count_files_in_s3_directory,
                    chown_dir)
 
@@ -29,6 +29,21 @@ def galleryPageView(page: ft.Page, params: Params, basket: Basket):
     page.bgcolor = ft.colors.BLACK45
     page.scroll = "always"
     page.controls.clear()
+    
+    date_dict = {}
+    
+    _, list_ = get_subfolders_in_bucket(s3_client, bucket_name, 'photos/', [])
+
+    for p in list_:
+        dd = [i for i in re.split('photos|yyyy=|mm=|dd=|/', p) if i]
+        if dd[0] not in date_dict:
+            date_dict[dd[0]] = {}
+
+        if dd[1] not in date_dict[dd[0]]:
+            date_dict[dd[0]][dd[1]] = []
+        
+        if dd[2] not in date_dict[dd[0]][dd[1]]:
+            date_dict[dd[0]][dd[1]].append(dd[2])     
     
     def snackBar(msg, color, font_size, dur):
         page.snack_bar = ft.SnackBar(
@@ -56,6 +71,14 @@ def galleryPageView(page: ft.Page, params: Params, basket: Basket):
         spacing=5,
         run_spacing=5,
     )
+    
+    def animate_container(e):
+        pass
+        # file_text.value  = grid_images.controls[0]
+        # file_text.update()
+        # grid_images.controls[0].width = 100
+        # grid_images.controls[0].height = 100
+        # grid_images.controls[0].update()
     
     def show_images(e):
         shutil.rmtree(download_path)
@@ -86,12 +109,17 @@ def galleryPageView(page: ft.Page, params: Params, basket: Basket):
         
         for i in pic_list:
             grid_images.controls.append(
-                ft.Image(
-                    src=os.path.join('/s3-files', i),
-                    fit=ft.ImageFit.CONTAIN,
-                    repeat=ft.ImageRepeat.NO_REPEAT,
-                    border_radius=ft.border_radius.all(10),
-                )
+                ft.Container(
+                    animate=ft.animation.Animation(300, 'easeInOut'),
+                    content=
+                        ft.Image(
+                            src=os.path.join('/s3-files', i),
+                            fit=ft.ImageFit.CONTAIN,
+                            repeat=ft.ImageRepeat.NO_REPEAT,
+                            border_radius=ft.border_radius.all(10),
+                        ),
+                    # on_click=animate_container
+            )
             )
         page.controls.insert(3, grid_images)
         page.update()        
@@ -100,6 +128,7 @@ def galleryPageView(page: ft.Page, params: Params, basket: Basket):
         try:
             grid_images.controls.clear()
             page.controls.remove(grid_images)
+            file_text.value = ""
             page.update()
         except: pass
         shutil.rmtree(download_path)
@@ -110,7 +139,49 @@ def galleryPageView(page: ft.Page, params: Params, basket: Basket):
                 , 'GREY'
                 , 16
                 , 3000
-                )
+                )   
+    
+    def monthly_(e):
+        try:
+            month_.options.clear()
+            m_list = list(date_dict[year_.value].keys())
+        except: 
+            m_list = []
+        for m in m_list:
+            month_.options.append(ft.dropdown.Option(m))
+        page.update()
+
+    def daily_(e):
+        try:
+            day_.options.clear()
+            d_list = date_dict[year_.value][month_.value]
+        except: 
+            d_list = []
+        for d in d_list:
+            day_.options.append(ft.dropdown.Option(d))
+        page.update()
+    
+    y_list = list(date_dict.keys())
+    
+    year_ = ft.Dropdown(
+        width=60,
+        # height=40,
+        options=[
+            ft.dropdown.Option(i) for i in y_list
+        ],
+        on_focus=monthly_
+    )
+    
+    month_ = ft.Dropdown(
+        width=60,
+        options=[],
+        on_focus=daily_
+    )
+
+    day_ = ft.Dropdown(
+        width=60,
+        options=[],
+    )
         
     show_image_btn = ft.ElevatedButton(
                 content=ft.Icon(ft.icons.PHOTO),
@@ -128,28 +199,8 @@ def galleryPageView(page: ft.Page, params: Params, basket: Basket):
     
     file_text = ft.Text(style=ft.TextThemeStyle.BODY_MEDIUM)
     
-    year_ = ft.TextField(label="년",
-                         keyboard_type='NUMBER',
-                         color='BLACK',
-                         width=60,
-                         height=30,
-                         text_size=12)
-    month_ = ft.TextField(label="월",
-                         keyboard_type='NUMBER',
-                         color='BLACK',
-                         width=60,
-                         height=30,
-                         text_size=12)
-    day_ = ft.TextField(label="일",
-                         keyboard_type='NUMBER',
-                         color='BLACK',
-                         width=60,
-                         height=30,
-                         text_size=12)
-    
-    
     datetime_row = ft.Row(
-        controls=[year_, month_, day_],
+        controls=[year_,month_,day_],
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN
         )
     
@@ -175,5 +226,6 @@ def galleryPageView(page: ft.Page, params: Params, basket: Basket):
     
     return ft.View(
                     "/gallery",
-                    page.controls
+                    page.controls,
+                    scroll='always'
                 )

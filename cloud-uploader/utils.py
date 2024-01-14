@@ -23,7 +23,7 @@ def check_file_exists_in_s3(s3, bucket_name, file_key):
     try:
         s3.head_object(Bucket=bucket_name, Key=file_key)
         return True
-    except:
+    except: 
         return False
     
 def count_files_in_s3_directory(s3, bucket_name, prefix):
@@ -39,6 +39,24 @@ def count_files_in_s3_directory(s3, bucket_name, prefix):
     except Exception as e:
         print(f"Error counting files: {e}")
         return -1    
+
+def get_subfolders_in_bucket(s3, bucket_name, prefix, subfolder_list):
+
+    while True:
+        subfolders = []
+        response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix, Delimiter='/')
+
+        if 'CommonPrefixes' in response:
+            subfolders.extend([obj['Prefix'] for obj in response['CommonPrefixes']])
+            for sub in subfolders:
+                folder, subfolder_list = get_subfolders_in_bucket(s3, bucket_name, sub, subfolder_list)
+                aa = 0
+                if not folder:
+                    aa += 1
+                    subfolder_list.append(sub)
+                if len(folder) == aa:
+                    break
+        return subfolders, subfolder_list
 
 
 def run_aws_cli_command(command):
@@ -73,4 +91,3 @@ def get_size(start_path):
         total_size /= 1024
         size_suffix_index += 1
     return "{:.2f} {}".format(total_size, size_suffixes[size_suffix_index])
-

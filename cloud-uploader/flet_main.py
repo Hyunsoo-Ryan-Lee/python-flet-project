@@ -26,5 +26,5 @@ def main(page: ft.Page):
 ft.app(target=main
     , upload_dir=os.environ.get('UPLOAD_DIR_NAME')
     , assets_dir="assets"
-    , port = 2000
+    # , port = 2000
     , view=ft.WEB_BROWSER)

@@ -257,7 +257,7 @@ def mainPageView(page: ft.Page, params: Params, basket: Basket):
             )
 
     to_gallery_btn = ft.ElevatedButton(
-                content=ft.Icon(ft.icons.PHOTO),
+                content=ft.Icon(ft.icons.PHOTO_LIBRARY),
                 bgcolor=ft.colors.GREY_300,
                 # disabled=True,
                 on_click=goto_gallery
@@ -306,7 +306,8 @@ def mainPageView(page: ft.Page, params: Params, basket: Basket):
     )
     return ft.View(
                 "/",
-                page.controls
+                page.controls,
+                scroll='always'
             )
 
     
